@@ -1,0 +1,25 @@
+{
+  "name": "img-cmp-server",
+  "version": "1.0.0",
+  "description": "img-cmp-server ==============",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/magicode/img-cmp-server.git"
+  },
+  "author": "",
+  "license": " ",
+  "bugs": {
+    "url": "https://github.com/magicode/img-cmp-server/issues"
+  },
+  "homepage": "https://github.com/magicode/img-cmp-server",
+  "dependencies": {
+    "async": "^0.9.0",
+    "img-cmp": "https://github.com/magicode/img-cmp/tarball/master",
+    "leveldown": "^1.0.0",
+    "onnex": "^0.1.11"
+  }
+}
