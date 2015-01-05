@@ -23,7 +23,10 @@ var onnexServer = onnex.create();
 var VECTOR_SIZE = 512;
 var HASH_SIZE = 20;
 
-var threshold = 0.03;
+
+var thresholdPercent = process.env.THRESHOLD || 2;
+
+var threshold = (thresholdPercent / 100);
 var likeRange = ( 1 / 100 ) * imgcmp.maxDiff;
 
 db.open(function(){
