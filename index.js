@@ -35,28 +35,22 @@ db.open(function(){
     
     var q = async.queue(function (task, callback) {
         if(task.method && qMethods[task.method]){
-            var oldCallback = task.callback;
-            task.callback = function(){
-                callback();
-                
-                if(oldCallback) oldCallback.apply(this,arguments);
-            };
-            qMethods[task.method](task);
+            qMethods[task.method](task,callback);
         }else{
             callback();
         }
     });
     
     function findImage( vector , sum , hash , callback ){
-        q.push({ vector: vector , sum: sum , hash: hash , callback: callback , method: 'findImage' });
+        q.push({ vector: vector , sum: sum , hash: hash , callback: callback , method: 'findImage' },callback);
     }
     
     function addImage( vector, sum, hash ,callback){
-        q.push({ vector: vector , sum: sum , hash: hash , callback: callback , method: 'addImage' });
+        q.push({ vector: vector , sum: sum , hash: hash , callback: callback , method: 'addImage' },callback);
     }
     
-    qMethods.addImage = function qAddImage( obj ){
-        var vector = obj.vector , sum = obj.sum , hash =  obj.hash ,callback = obj.callback;
+    qMethods.addImage = function qAddImage( obj ,callback){
+        var vector = obj.vector , sum = obj.sum , hash =  obj.hash ;//,callback = obj.callback;
         
         if(vector.length != VECTOR_SIZE)
             return callback('vector.length != VECTOR_SIZE');
@@ -81,9 +75,9 @@ db.open(function(){
         });
     };
     
-    qMethods.findImage = function qFindImage( obj ){
+    qMethods.findImage = function qFindImage( obj ,callback){
         
-        var vector = obj.vector , sum = obj.sum , hash = obj.hash ,callback = obj.callback;
+        var vector = obj.vector , sum = obj.sum , hash = obj.hash ;//,callback = obj.callback;
 
         if(vector.length != VECTOR_SIZE)
             return callback('vector.length != VECTOR_SIZE');
@@ -124,13 +118,11 @@ db.open(function(){
             
             if(!iterList.length){
                 if(hash){
-                    
-                    obj.callback = function(err){
-                        callback(err,null,true);
-                    };
-                    qMethods.addImage(obj);
+                    qMethods.addImage(obj ,function(err){
+                        callback(err,null,true,{ cmpCount: cmpCount });
+                    });
                 }else{
-                    callback(null,null);
+                    callback(null,null,false,{ cmpCount: cmpCount });
                 }
                 return;
             }
@@ -146,18 +138,16 @@ db.open(function(){
                     iterCurr.end(function(){});
                     return next();
                 }
+                var val = imgcmp.compare(value,vector);
+                cmpCount++;
                 
-                imgcmp.compare(value,vector,function(err,value){
-                    cmpCount++;
-                    if(value <= threshold){
-                        var findHash = key.slice(4);
-                        iterList.forEach(function(i){ i.end(function(){}); });
-                        callback(null, findHash ,null,{ key: key.toString('hex') ,value: value , cmpCount: cmpCount });
-                    }else{ 
-                        next();
-                    }
-                });
-                
+                if(val <= threshold){
+                    var findHash = key.slice(4);
+                    iterList.forEach(function(i){ i.end(function(){}); });
+                    callback(null, findHash ,null,{ key: key.toString('hex') ,value: val , cmpCount: cmpCount });
+                }else{ 
+                    next();
+                }
             });
         
         }
@@ -178,7 +168,23 @@ db.open(function(){
         
        
     });
-   
+
+
+    onnexServer.addFunction("findImage", function(vector, sum) {
+        var cb = Array.prototype.slice.call(arguments).pop();
+
+        vector = new Buffer(vector, 'hex');
+
+        qMethods.findImage({
+            vector: vector,
+            sum: sum
+        },
+        function(err, findHash, info, add) {
+            cb(err, findHash && findHash.toString('hex'), info, add);
+        });
+
+    });
+    
     onnexServer.addBind({ port: PORT , host: IP });
 
 
