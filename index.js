@@ -44,19 +44,19 @@ db.open(function() {
         //load last info 
         function next(){
             iterFromEnd.next(function(err, key, value) {
-                console.log("read next" ,err ,key);
+                //console.log("read next" ,err ,key);
                 
                 
                 if ( key === undefined || err || count >= LIMIT_COUNT ) {
                     //end loading 
                     onnexServer.addBind({ port: PORT,  host: IP });
-                    
+                    console.log("add vec",count);
                     iterFromEnd.end(function(){});
                     return;   
                 }
                 
                 var index = key.readUInt32BE(1);
-                console.log("add index",index);
+                //console.log("add index",index);
                 
                 if(!dbFileIndex)  dbFileIndex = index;
                 var realKey = key.slice(5);
@@ -105,18 +105,22 @@ function deleteOldVectors(){
         end: end
     });
     
+    var count = 0;
+    
     function next(){
         
         iterDeleteOld.next(function(err, key, value) {
             if ( key === undefined || err ) {
+                console.log("del vec",count);
                 return;   
             }
-            console.log("del",key ,value);
+            //console.log("del",key ,value);
             db.batch([
                 { type: 'del', key: key  },
                 { type: 'del', key: value }
             ], function () {
-                console.log(arguments)
+                count++;
+                //console.log(arguments)
                 next();
             });
         });
@@ -179,7 +183,7 @@ qMethods.addImage = function qAddImage(obj, callback) {
     key.writeUInt16BE(sum, 1);
     hash.copy(key, 4);
 
-    console.log("addImage");
+    
 
     db.put(key, vector, function(err) {
         callback(err);
@@ -191,6 +195,8 @@ qMethods.addImage = function qAddImage(obj, callback) {
     fileKey.fill(0);
     
     var currIndex= ++dbFileIndex;
+    
+    console.log("addImage" , currIndex);
     
     fileKey.writeUInt32BE(currIndex , 1);
     key.copy(fileKey, 5);
