@@ -23,7 +23,7 @@ var onnexServer = onnex.create();
 var VECTOR_SIZE = 512;
 var HASH_SIZE = 20;
 
-var LIMIT_COUNT = 50000;
+var LIMIT_COUNT = +process.env.LIMIT_COUNT || 50000;
 var DEL_PER = 1000;
 
 
