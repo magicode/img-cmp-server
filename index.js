@@ -24,7 +24,7 @@ var VECTOR_SIZE = 512;
 var HASH_SIZE = 20;
 
 var LIMIT_COUNT = +process.env.LIMIT_COUNT || 50000;
-var DEL_PER = 1000;
+var DEL_PER = LIMIT_COUNT/2;
 
 
 var thresholdPercent = process.env.THRESHOLD || 2;
@@ -90,7 +90,7 @@ function deleteOldVectors(){
     
     var endIndex = dbFileIndex - LIMIT_COUNT;
     if(endIndex <= 0) return;
-    
+
     var start = new Buffer(5);
     start.fill(0);
     start[0] = 0x01;
@@ -98,7 +98,6 @@ function deleteOldVectors(){
     var end = new Buffer(5);
     end[0] = 0x01;
     end.writeUInt32BE(endIndex, 1);
-    
 
     var iterDeleteOld = db.iterator({
         start: start,
@@ -114,13 +113,12 @@ function deleteOldVectors(){
                 console.log("del vec",count);
                 return;   
             }
-            //console.log("del",key ,value);
+
             db.batch([
                 { type: 'del', key: key  },
                 { type: 'del', key: value }
             ], function () {
                 count++;
-                //console.log(arguments)
                 next();
             });
         });

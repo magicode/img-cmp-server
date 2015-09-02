@@ -20,7 +20,7 @@
     "async": "^0.9.0",
     "img-cmp": "https://github.com/magicode/img-cmp/tarball/master",
     "leveldown": "^1.0.0",
-    "memdown": "^1.0.0",
+    "memdown": "https://github.com/Level/memdown/tarball/v1.0.2",
     "onnex": "^0.1.11"
   }
 }
